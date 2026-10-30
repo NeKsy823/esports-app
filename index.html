@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esports Connect - Поиск команд и пракков</title>
+    <!-- Подключаем Tailwind CSS для красивого киберспортивного дизайна -->
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen">
+
+    <!-- Шапка сайта -->
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-black tracking-wider text-indigo-500 uppercase">Esports<span class="text-white">Connect</span></h1>
+            <span class="text-sm bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-full font-medium">Лента объявлений</span>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Левая колонка: Форма создания объявления -->
+        <div class="lg:col-span-1">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sticky top-24 shadow-xl">
+                <h2 class="text-xl font-bold mb-6 text-white flex items-center gap-2">
+                    <span>📝</span> Создать объявление
+                </h2>
+                
+                <form id="postForm" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Название команды / Никнейм</label>
+                        <input type="text" id="teamName" required placeholder="Например: Natus Vincere или X-God" 
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Что вы ищете?</label>
+                        <select id="lookingFor" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+                            <option value="Игрок в команду">Ищем игрока (+1 / +2)</option>
+                            <option value="Поиск команды">Пойду в команду (LFT)</option>
+                            <option value="Пракк / Спарринг">Ищем пракк / скрим (Scrim)</option>
+                            <option value="Турнир">Организуем/Ищем турнир</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Описание требования</label>
+                        <textarea id="description" rows="4" required placeholder="Укажите ваш уровень (Faceit/Rank), прайм-тайм, цели и требования к кандидатам..." 
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition resize-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Связь (Discord / Telegram)</label>
+                        <input type="text" id="contact" required placeholder="@username или Discord ID" 
+                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition">
+                    </div>
+
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 cursor-pointer">
+                        Опубликовать
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Правая колонка: Лента объявлений -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Переключатели фильтров -->
+            <div class="flex gap-2 overflow-x-auto pb-2">
+                <button class="filter-btn active bg-indigo-600 px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer text-white" onclick="filterPosts('all')">Все</button>
+                <button class="filter-btn bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition cursor-pointer" onclick="filterPosts('Игрок в команду')">Ищут игрока</button>
+                <button class="filter-btn bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition cursor-pointer" onclick="filterPosts('Поиск команды')">Ищут команду</button>
+                <button class="filter-btn bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white transition cursor-pointer" onclick="filterPosts('Пракк / Спарринг')">Пракки</button>
+            </div>
+
+            <!-- Список карточек -->
+            <div id="postsContainer" class="space-y-4">
+                <!-- Карточки будут добавляться сюда динамически через JS -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Изначальные тестовые данные
+        let posts = [
+            {
+                id: 1,
+                teamName: "Team CyberWolves",
+                lookingFor: "Игрок в команду",
+                description: "Ищем снайпера (AWP) в состав по CS2. Уровень Faceit 8-10. Регулярные пракки в 19:50 по МСК, участие в ESEA/Fastcup.",
+                contact: "Discord: wolf_manager",
+                date: "Только что"
+            },
+            {
+                id: 2,
+                teamName: "Apex Predators",
+                lookingFor: "Пракк / Спарринг",
+                description: "Нужен скрим/пракк на сегодня в 21:00 по МСК. Уровень средний/высокий. Карта Mirage / Ancient. Играем BO3.",
+                contact: "Telegram: @apex_pr",
+                date: "5 мин. назад"
+            }
+        ];
+
+        const form = document.getElementById('postForm');
+        const container = document.getElementById('postsContainer');
+        let currentFilter = 'all';
+
+        // Функция отрисовки объявлений
+        function renderPosts() {
+            container.innerHTML = '';
+            
+            const filteredPosts = currentFilter === 'all' 
+                ? posts 
+                : posts.filter(p => p.lookingFor === currentFilter);
+
+            if(filteredPosts.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 bg-slate-900/50 border border-slate-800 rounded-2xl text-slate-500">
+                        Пока объявлений в этой категории нет. Станьте первым!
+                    </div>
+                `;
+                return;
+            }
+
+            filteredPosts.forEach(post => {
+                // Подсветка тегов разными цветами
+                let tagColor = "bg-indigo-500/10 text-indigo-400 border-indigo-500/20";
+                if(post.lookingFor === "Пракк / Спарринг") tagColor = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+                if(post.lookingFor === "Поиск команды") tagColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                if(post.lookingFor === "Турнир") tagColor = "bg-rose-500/10 text-rose-400 border-rose-500/20";
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-md hover:border-slate-700 transition space-y-4 animate-fade-in";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start gap-4">
+                        <div>
+                            <span class="text-xs font-semibold uppercase px-2.5 py-1 rounded-md border ${tagColor}">
+                                ${post.lookingFor}
+                            </span>
+                            <h3 class="text-lg font-bold text-white mt-3">${post.teamName}</h3>
+                        </div>
+                        <span class="text-xs text-slate-500">${post.date}</span>
+                    </div>
+                    <p class="text-slate-300 text-sm leading-relaxed">${post.description}</p>
+                    <div class="pt-4 border-t border-slate-800/60 flex items-center justify-between">
+                        <span class="text-xs text-slate-400 font-medium">Контакты для связи:</span>
+                        <span class="bg-slate-950 px-3 py-1.5 rounded-lg text-sm font-mono text-indigo-400 border border-slate-800">${post.contact}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Обработка отправки формы
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const newPost = {
+                id: Date.now(),
+                teamName: document.getElementById('teamName').value,
+                lookingFor: document.getElementById('lookingFor').value,
+                description: document.getElementById('description').value,
+                contact: document.getElementById('contact').value,
+                date: "Только что"
+            };
+
+            posts.unshift(newPost); // Добавляем в начало списка
+            form.reset();
+            renderPosts();
+        });
+
+        // Функция фильтрации
+        function filterPosts(category) {
+            currentFilter = category;
+            
+            // Смена активного класса у кнопок фильтров
+document.querySelectorAll('.filter-btn').forEach(btn => {
+btn.classList.remove('active', 'bg-indigo-600', 'text-white');
+btn.classList.add('bg-slate-900', 'text-slate-400', 'border-slate-800');
+});
+event.target.classList.add('active', 'bg-indigo-600', 'text-white');
+event.target.classList.remove('bg-slate-900', 'text-slate-400', 'border-slate-800');
+renderPosts();
+}
+// Первая инициализация
+renderPosts();
